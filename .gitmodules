@@ -1,0 +1,3 @@
+[submodule "extras/buildx"]
+	path = extras/buildx
+	url = https://github.com/srtobi/buildx

@@ -1,0 +1,14 @@
+*.swp
+
+*.swap
+.vscode/
+
+
+lib/
+
+bin/
+
+doc/html/
+
+build/
+release/
