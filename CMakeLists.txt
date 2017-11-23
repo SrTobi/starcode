@@ -19,11 +19,16 @@ if(WIN32)
 endif()
 find_package(Boost COMPONENTS system thread regex filesystem program_options REQUIRED)
 include_directories(${Boost_INCLUDE_DIRS})
+include_directories("${CMAKE_CURRENT_LIST_DIR}/extras/websocket")
 link_directories(${Boost_LIBRARY_DIRS})
+
+find_package(websocketpp REQUIRED)
 
 find_package(utilx REQUIRED)
 
-#include_directories("tests")
+find_package(V8 REQUIRED)
+include_directories(${V8_INCLUDE_DIR})
+
 
 # tests must come first
 add_subdirectory("src")

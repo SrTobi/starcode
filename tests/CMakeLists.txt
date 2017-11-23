@@ -1,5 +1,0 @@
-
-include_directories(${CMAKE_CURRENT_DIRECTORY})
-SCAN_SOURCE_HERE(SOURCE "cpp;hpp")
-
-set(TEST_SOURCE ${SOURCE} PARENT_SCOPE)
