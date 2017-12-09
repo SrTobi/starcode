@@ -51,7 +51,7 @@ struct FixtureWrapper
         {
             Local<String> source = str(code);
             Local<Script> script = Script::Compile(ctx, source).ToLocalChecked();
-            auto res = fromLocal<TestT>(ctx, unwrap(script->Run(ctx)));
+            auto res = fromLocal<TestT>(iso, ctx, unwrap(script->Run(ctx)));
             BOOST_CHECK_EQUAL(res, expected_res);
         });
 

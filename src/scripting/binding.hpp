@@ -176,7 +176,7 @@ namespace bd {
                 HandleScope hScope(iso);
                 auto ctx = iso->GetCurrentContext();
                 This* ths = reinterpret_cast<This*>(info.Data().As<External>()->Value());
-                info.GetReturnValue().Set(toLocal<Ret>(iso, ctx, (ths->*func)(fromLocal<Args>(ctx, info[I])...)));
+                info.GetReturnValue().Set(toLocal<Ret>(iso, ctx, (ths->*func)(fromLocal<Args>(iso, ctx, info[I])...)));
             }
         };
 
