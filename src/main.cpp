@@ -1,14 +1,25 @@
 #include "game.hpp"
+#include "server/server.hpp"
+
+#include <iostream>
+#include <thread>
 
 using namespace std;
 
+#if 1
 #if !defined(STARCODE_TEST)
 int main()
 {
     GameConfig config {
         {"tobi", "henning"}
     };
-    Game::InitializeGame(config);
+    auto& game = Game::InitializeGame(config);
+
+    auto server = Server::create();
+    server->start(8080);
+
+    std::cout << "start" << std::endl;
+    game.run();
 
     Game::Shutdown();
     return 0;
@@ -16,7 +27,7 @@ int main()
 #endif
 
 
-#if 0
+#else
 #include "websocket.hpp"
 
 typedef SimpleWeb::SocketServer<SimpleWeb::WS> WsServer;
@@ -32,7 +43,7 @@ int main() {
     //    var ws=new WebSocket("ws://localhost:8080/echo");
     //    ws.onmessage=function(evt){console.log(evt.data);};
     //    ws.send("test");
-    auto& echo=server.endpoint["^/echo/?$"];
+    auto& echo=server.endpoint["^/echo/.*$"];
     
     echo.on_message=[&server](shared_ptr<WsServer::Connection> connection, shared_ptr<WsServer::Message> message) {
         //WsServer::Message::string() is a convenience function for:
@@ -58,7 +69,7 @@ int main() {
     };
     
     echo.on_open=[](shared_ptr<WsServer::Connection> connection) {
-        cout << "Server: Opened connection " << (size_t)connection.get() << endl;
+        cout << "Server: Opened connection " << (size_t)connection.get() << " on " << connection->path << endl;
     };
     
     //See RFC 6455 7.4.1. for status codes

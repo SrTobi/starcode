@@ -2,6 +2,7 @@
 
 #include <v8.h>
 #include <chrono>
+#include <functional>
 
 class Processor
 {

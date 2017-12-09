@@ -11,14 +11,14 @@ buildx_debug("source: ${STARCODE_SOURCE}" proj)
 buildx_auto_group("${STARCODE_SOURCE}")
 
 add_executable(starcode ${STARCODE_SOURCE})
-target_link_libraries(starcode ${Boost_LIBRARIES} x::utilx pthread ssl crypto ${V8_LIBRARY} "/home/tobi/v8/v8/out/x64.debug/lib.target/libv8_libplatform.so" pthread)
+target_link_libraries(starcode ${Boost_LIBRARIES} x::utilx pthread ssl crypto ${V8_LIBRARY} "/usr/lib/libv8_libplatform.so" pthread)
 #buildx_copy_media(starcode "game")
 
 
 buildx_add_internal_test(test-starcode ${PROJECT_SOURCE_DIR}/tests
 							TEST_TARGET starcode
 							DEFINITIONS STARCODE_TEST)
-target_link_libraries(test-starcode ${Boost_LIBRARIES} x::utilx pthread ssl crypto ${V8_LIBRARY} "/home/tobi/v8/v8/out/x64.debug/lib.target/libv8_libplatform.so" "/home/tobi/v8/v8/out/x64.debug/lib.target/libv8_libbase.so" pthread)
+target_link_libraries(test-starcode ${Boost_LIBRARIES} x::utilx pthread ssl crypto ${V8_LIBRARY} "/usr/lib/libv8_libplatform.so" pthread)
 # tests
 #AUTO_SOURCE_GROUP("${TEST_SOURCE}")
 #add_executable(test-starcode ${SOURCE} ${TEST_SOURCE})

@@ -1,5 +1,7 @@
 #include "universe.hpp"
 
+#include <iostream>
+
 void Universe::add_object(std::shared_ptr<GameObject> obj)
 {
     if(obj->active())
@@ -34,9 +36,9 @@ void Universe::update(float dt)
         }
 
         // check with other dynamic objects
-        for(auto it2 = it; it2 != _dynObjs.end(); ++it2)
+        for(auto it2 = std::next(it); it2 != _dynObjs.end(); ++it2)
         {
-            auto& obj2 = *it;
+            auto& obj2 = *it2;
             auto sight2 = obj2->sight();
             auto dist = glm::distance(obj->position(), obj2->position());
             _check_sight(obj, obj2, dist < sight);
@@ -63,6 +65,7 @@ void Universe::_check_sight(const obj_ptr& subj, const obj_ptr& to, bool insight
             // but is now
             sightSet.insert(id);
             subj->on_vision(to);
+            std::cout << subj->name() << " sees " << to->name() << std::endl;
         }
         
     } else {
@@ -72,6 +75,8 @@ void Universe::_check_sight(const obj_ptr& subj, const obj_ptr& to, bool insight
             // but not anymore
             sightSet.erase(it);
             subj->on_vision_lost(to);
+            std::cout << subj->name() << " lost " << to->name() << std::endl;
+            std::cout << "(" << subj->position() << ", " << to->position() << ")\n";
         }
     }
 }

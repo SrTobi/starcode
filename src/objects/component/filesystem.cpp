@@ -174,7 +174,8 @@ FSType FileSystem::type(const std::string& cwd, const std::string& path)
 FileSystem::Entity* FileSystem::write(const std::string& cwd, const std::string& path, std::string content)
 {
     Entity* e = entity(cwd, path, FSOperation::write);
-    static_cast<CodeEntity*>(e)->_code = std::move(content);
+    if (e)
+        static_cast<CodeEntity*>(e)->_code = std::move(content);
     return e;
 }
 

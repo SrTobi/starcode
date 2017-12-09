@@ -2,6 +2,7 @@
 
 #include <boost/noncopyable.hpp>
 #include <unordered_map>
+#include <boost/asio.hpp>
 #include "defs.hpp"
 #include "player.hpp"
 #include "fraction.hpp"
@@ -29,6 +30,8 @@ public:
     Fraction& resolve_fraction(const fraction_id& id);
     obj_ptr resolve_object(const obj_id& id);
 
+    Player* get_player_by_hash(const std::string& hash);
+
     template<typename T, typename... Args>
     std::shared_ptr<T> make_object(Args&&... args)
     {
@@ -39,9 +42,12 @@ public:
 
     void register_object(const obj_ptr& obj);
 
+    void run();
+
     Universe& universe();
     const std::shared_ptr<V8ProcessorPool>& processor_pool() const;
     obj_id next_obj_id();
+    const std::shared_ptr<boost::asio::io_service>& service() const;
 private:
     Game(const GameConfig& config);
     
@@ -50,8 +56,10 @@ private:
     Universe _universe{};
     ResourceType _ore_type {"ore"};
     std::unordered_map<player_id, Player> _players{};
+    std::unordered_map<std::string, Player*> _hashToPlayer{};
     std::unordered_map<fraction_id, Fraction> _fractions{};
     std::unordered_map<obj_id, obj_ptr> _objects{};
     id_value_type _nextId = 0;
     std::shared_ptr<V8ProcessorPool> _ppool;
+    std::shared_ptr<boost::asio::io_service> _service;
 };

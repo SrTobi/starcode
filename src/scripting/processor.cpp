@@ -26,22 +26,6 @@
 using namespace v8;
 
 
-class ArrayBufferAllocator : public v8::ArrayBuffer::Allocator {
- public:
-	virtual void* Allocate(size_t length) {
-	void* data = AllocateUninitialized(length);
-	return data == NULL ? data : memset(data, 0, length);
-	}
-	virtual void* AllocateUninitialized(size_t length) { return malloc(length); }
-	virtual void Free(void* data, size_t) { free(data); }
-};
-
-ArrayBufferAllocator allocator;
-
-
-
-
-
 class V8Inst : public Processor
 {
 public:
@@ -87,7 +71,7 @@ private:
 	void run(const init_func& init_ctx)
 	{
 		Isolate::CreateParams create_params;
-		create_params.array_buffer_allocator = &allocator;
+		create_params.array_buffer_allocator = v8::ArrayBuffer::Allocator::NewDefaultAllocator();
 		mIsolate = Isolate::New(create_params);
 		{
 			Isolate::Scope isolate_scope(mIsolate);
@@ -255,7 +239,7 @@ namespace {
 		{
 			// Initialize V8.
 			V8::InitializeICU();
-			V8::InitializeExternalStartupData("~/workspace/starcode/build/bin/test-starcode");
+			V8::InitializeExternalStartupData("");
 			platform = std::unique_ptr<Platform>{platform::CreateDefaultPlatform()};
 			V8::InitializePlatform(platform.get());
 			V8::Initialize();

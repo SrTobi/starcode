@@ -13,6 +13,7 @@ namespace detail {
 
 class Player;
 class Fraction;
+class Spaceship;
 
 struct player_id : proto_id<detail::player_id_tag>
 {
@@ -30,6 +31,8 @@ public:
     const player_id& id() const;
     const std::string& name() const;
     Fraction& fraction();
+
+    std::shared_ptr<Spaceship> mainShip;
 private:
     const player_id _id;
     const std::string _name;

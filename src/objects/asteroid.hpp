@@ -4,10 +4,10 @@
 #include "game_object.hpp"
 
 
-class Astroid : public GameObject
+class Asteroid : public GameObject
 {
 public:
-    Astroid(Resource resource, unsigned int amount);
+    Asteroid(Resource resource, unsigned int amount);
 
     virtual ScanResult interact_scan() override;
     virtual boost::optional<MineResult> interact_mine(unsigned int power) override;

@@ -74,15 +74,16 @@ class GameObject: boost::noncopyable
 {
     friend class Universe;
 public:
-    GameObject();
+    GameObject(std::string name);
     virtual ~GameObject() = default;
 
     const obj_id& id() const;
+    const std::string& name() const;
 
     // controll
     bool activate(bool active = true);
-    const vec2& position(const vec2& pos);
-    const vec2& velocity(const vec2& vel);
+    const vec2& set_position(const vec2& pos);
+    const vec2& set_velocity(const vec2& vel);
     void set_target(const Target& target);
 
     // current status
@@ -106,13 +107,16 @@ public:
     // possible interactions
     virtual ScanResult interact_scan() = 0;
     virtual boost::optional<MineResult> interact_mine(unsigned int power);
+    virtual bool interact_send_code(const std::string& path, const std::string& code);
+    virtual bool interact_reboot();
 private:
     void _update(float dt);
 
 protected:
     const obj_id _id;
-    vec2 _position{};       // in meter
-    vec2 _velocity{};       // in meter per second
+    const std::string _name;
+    vec2 _position{0, 0};       // in meter
+    vec2 _velocity{0, 0};       // in meter per second
     boost::optional<Target> _target{};
     std::unordered_set<obj_id> _objInSight{};
     bool _active = false;

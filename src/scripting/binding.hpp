@@ -8,6 +8,8 @@
 #include <type_traits>
 #include <utility>
 
+#include "defs.hpp"
+
 namespace bd {
     using namespace v8;
 
@@ -44,11 +46,11 @@ namespace bd {
             template<> \
             struct converter<type> \
             { \
-                static inline type from_local(Local<Context> ctx, Local<Value> local) \
+                static inline type from_local(Isolate* iso, Local<Context> ctx, Local<Value> local) \
                 { \
                     return unwrap(local->toFunc(ctx), msg)->Value(); \
                 } \
-                static inline Local<v8Type> to_local(Isolate* iso, type val) \
+                static inline Local<v8Type> to_local(Isolate* iso, Local<Context> ctx, type val) \
                 { \
                     return fromFunc(iso, val); \
                 } \
@@ -62,12 +64,12 @@ namespace bd {
         template<>
         struct converter<Local<Value>>
         {
-            static inline Local<Value> from_local(Local<Context> ctx, Local<Value> local)
+            static inline Local<Value> from_local(Isolate* iso, Local<Context> ctx, Local<Value> local)
             {
                 return local;
             }
 
-            static inline Local<Value> to_local(Isolate* iso, Local<Value> local)
+            static inline Local<Value> to_local(Isolate* iso, Local<Context> ctx, Local<Value> local)
             {
                 return local;
             }
@@ -76,30 +78,51 @@ namespace bd {
         template<>
         struct converter<std::string>
         {
-            static inline std::string from_local(Local<Context> ctx, Local<Value> local)
+            static inline std::string from_local(Isolate* iso, Local<Context> ctx, Local<Value> local)
             {
                 String::Utf8Value utf8String(unwrap(local->ToString(ctx), "Failed to convert to string"));
                 return std::string(*utf8String, utf8String.length());
             }
 
-            static inline Local<String> to_local(Isolate* iso, const std::string& str)
+            static inline Local<String> to_local(Isolate* iso, Local<Context> ctx, const std::string& str)
             {
                 return unwrap(String::NewFromUtf8(iso, str.c_str(), NewStringType::kNormal, str.size()), "Failed to convert string to local");
+            }
+        };
+
+        template<>
+        struct converter<vec2>
+        {
+            static inline vec2 from_local(Isolate* iso, Local<Context> ctx, Local<Value> local)
+            {
+                auto obj = unwrap(local->ToObject(ctx), "vector must be an object!");
+                auto x = unwrap(obj->Get(ctx, str("x")), "vector needs a x property");
+                auto y = unwrap(obj->Get(ctx, str("y")), "vector needs a y property");
+                return vec2(unwrap(x->ToNumber(ctx), "x must be a number")->Value(),
+                            unwrap(y->ToNumber(ctx), "y must be a number")->Value());
+            }
+
+            static inline Local<v8::Object> to_local(Isolate* iso, Local<Context> ctx, const vec2& vec)
+            {
+                auto obj = v8::Object::New(iso);
+                obj->Set(str("x"), Number::New(iso, vec.x));
+                obj->Set(str("y"), Number::New(iso, vec.y));
+                return obj;
             }
         };
     }
 
     template<typename T>
-    typename std::decay<T>::type fromLocal(Local<Context> ctx, Local<Value> local)
+    typename std::decay<T>::type fromLocal(Isolate* iso, Local<Context> ctx, Local<Value> local)
     {
-        return detail::converter<typename std::decay<T>::type>::from_local(ctx, local);
+        return detail::converter<typename std::decay<T>::type>::from_local(iso, ctx, local);
     }
 
 
     template<typename T>
-    Local<Value> toLocal(Isolate* iso, const T& val)
+    Local<Value> toLocal(Isolate* iso, Local<Context> ctx, const T& val)
     {
-        return detail::converter<typename std::decay<T>::type>::to_local(iso, val);
+        return detail::converter<typename std::decay<T>::type>::to_local(iso, ctx, val);
     }
 
 
@@ -143,7 +166,7 @@ namespace bd {
                 HandleScope hScope(iso);
                 auto ctx = iso->GetCurrentContext();
                 This* ths = reinterpret_cast<This*>(info.Data().As<External>()->Value());
-                (ths->*func)(fromLocal<Args>(ctx, info[I])...);
+                (ths->*func)(fromLocal<Args>(iso, ctx, info[I])...);
             }
 
             template<typename Func, std::size_t... I>
@@ -153,7 +176,7 @@ namespace bd {
                 HandleScope hScope(iso);
                 auto ctx = iso->GetCurrentContext();
                 This* ths = reinterpret_cast<This*>(info.Data().As<External>()->Value());
-                info.GetReturnValue().Set(toLocal<Ret>(iso, (ths->*func)(fromLocal<Args>(ctx, info[I])...)));
+                info.GetReturnValue().Set(toLocal<Ret>(iso, ctx, (ths->*func)(fromLocal<Args>(ctx, info[I])...)));
             }
         };
 

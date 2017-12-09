@@ -1,11 +1,12 @@
 #include "game.hpp"
 
 #include "scripting/processor.hpp"
-#include "objects/astroid.hpp"
-
+#include "objects/asteroid.hpp"
+#include "objects/spaceship.hpp"
 
 #include <cassert>
 #include <tuple>
+#include <iostream>
 
 namespace {
     Game* _CurrentGame = nullptr;
@@ -13,6 +14,7 @@ namespace {
 
 
 Game::Game(const GameConfig& config)
+    : _service(new boost::asio::io_service())
 {
     assert(!_CurrentGame);
     _CurrentGame = this;
@@ -25,6 +27,7 @@ Game::Game(const GameConfig& config)
         auto& f = _fractions.emplace(std::piecewise_construct, std::make_tuple(fid), std::make_tuple(fid, name + "-fraction")).first->second;
         auto pid = player_id{id};
         auto& p = _players.emplace(std::piecewise_construct, std::make_tuple(pid), std::make_tuple(pid, name, std::ref(f))).first->second;
+        _hashToPlayer.emplace(name, &p);
         f.add_player(p);
         return &p;
     };
@@ -36,11 +39,16 @@ Game::Game(const GameConfig& config)
     // make players
     for(const auto& name : config.players)
     {
-        make_player(_next_id(), name);
+        auto p = make_player(_next_id(), name);
+        auto ship = p->mainShip = make_object<Spaceship>(p->id());
+        ship->set_position(vec2(0, 50.0f));
+        if (name == "tobi") {
+            ship->set_target(Target(vec2(160, 50.0f)));
+        }
     }
 
     // make map
-    make_object<Astroid>(&_ore_type, 10000);
+    make_object<Asteroid>(&_ore_type, 10000);
 }
 
 Game::~Game()
@@ -69,6 +77,15 @@ obj_ptr Game::resolve_object(const obj_id& id)
     return _objects.at(id);
 }
 
+
+Player* Game::get_player_by_hash(const std::string& hash)
+{
+    auto it = _hashToPlayer.find(hash);
+    if (it == _hashToPlayer.end())
+        return nullptr;
+    return it->second;
+}
+
 Universe& Game::universe()
 {
     return _universe;
@@ -95,6 +112,24 @@ void Game::register_object(const obj_ptr& obj)
 id_value_type Game::_next_id()
 {
     return _nextId++;
+}
+
+const std::shared_ptr<boost::asio::io_service>& Game::service() const
+{
+    return _service;
+}
+
+void Game::run()
+{
+    while (true)
+    {
+        _service->reset();
+        _service->run();
+
+        _universe.update(0.01f);
+
+        _ppool->update_all();
+    }
 }
 
 
