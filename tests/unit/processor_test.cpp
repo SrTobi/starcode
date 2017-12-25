@@ -39,8 +39,6 @@ TESTX_AUTO_TEST_CASE(parallel_posting)
 
 using await_callback = std::function<void(v8::Isolate*, v8::Local<v8::Context>&, v8::Local<v8::Value>)>;
 
-int GReturn = 0;
-
 void resolve_await(const v8::FunctionCallbackInfo<v8::Value>& info)
 {
     auto iso = info.GetIsolate();
@@ -72,7 +70,7 @@ void call_next(const v8::FunctionCallbackInfo<v8::Value>& info)
     auto proc = Processor::FromContext(ctx);
     
     BOOST_REQUIRE(info[0]->IsFunction());
-    BOOST_CHECK(info[0]->IsAsyncFunction());
+    //BOOST_CHECK(info[0]->IsAsyncFunction());
 
     auto func_l = v8::Local<v8::Function>::Cast(info[0]);
     v8::CopyablePersistentTraits<v8::Function>::CopyablePersistent func(iso, func_l);
@@ -82,7 +80,7 @@ void call_next(const v8::FunctionCallbackInfo<v8::Value>& info)
         auto ret = func_l->Call(ctx->Global(), 0, nullptr);
         await(iso, ctx, ret, [](v8::Isolate*, v8::Local<v8::Context>&, v8::Local<v8::Value> res)
         {
-            GReturn = res->ToInt32()->Value();
+            BOOST_CHECK_EQUAL(5, res->ToInt32()->Value());
         });
     });
 }
@@ -111,14 +109,23 @@ TESTX_AUTO_TEST_CASE(test_callback)
         //ctx->Global()->Set(ctx, v8::String::NewFromUtf8(iso, "do_next"), v8::Function::New(iso, call_next));
         v8::Local<v8::String> source =
             v8::String::NewFromUtf8(iso, R"code(
+                    do_next(function() {
+                        return 5;
+                    });
+                    do_next(function() {
+                        return Promise.resolve(5);
+                    });
                     do_next(async function() {
                         return Promise.resolve(2 + 3);
                     });
+                    do_next(async function() {
+                        const x = await Promise.resolve(5);
+                        return x;
+                    })
                 )code", v8::NewStringType::kNormal).ToLocalChecked();
         v8::Local<v8::Script> script = v8::Script::Compile(ctx, source).ToLocalChecked();
         script->Run(ctx);
     });
 
     pool->update_all();
-    BOOST_CHECK_EQUAL(5, GReturn);
 }
