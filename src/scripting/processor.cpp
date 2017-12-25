@@ -76,7 +76,12 @@ private:
 		{
 			Isolate::Scope isolate_scope(mIsolate);
 			HandleScope handle_scope(mIsolate);
-			mContext.Reset(mIsolate, init_ctx(mIsolate));
+			
+			{
+				auto ctx = init_ctx(mIsolate);
+				ctx->SetAlignedPointerInEmbedderData(1, this);
+				mContext.Reset(mIsolate, ctx);
+			}
 
 			mRun = true;
 			mInitPromise.set_value();
@@ -141,6 +146,12 @@ private:
 	std::promise<void> mInitPromise;
 	std::function<void()> mFinished;
 };
+
+
+Processor* Processor::FromContext(const v8::Local<v8::Context>& ctx)
+{
+	return reinterpret_cast<V8Inst*>(ctx->GetAlignedPointerFromEmbedderData(1));
+}
 
 
 class V8Manager : public V8ProcessorPool

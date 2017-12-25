@@ -11,6 +11,8 @@ public:
 
     virtual ~Processor() = default;
     virtual void post(const msg_func& msg) = 0;
+
+    static Processor* FromContext(const v8::Local<v8::Context>& ctx);
 };
 
 class V8ProcessorPool

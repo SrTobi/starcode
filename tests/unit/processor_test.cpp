@@ -69,7 +69,7 @@ void call_next(const v8::FunctionCallbackInfo<v8::Value>& info)
     auto iso = info.GetIsolate();
     v8::HandleScope hScope(iso);
     auto ctx = iso->GetCurrentContext();
-    auto proc = reinterpret_cast<Processor*>(ctx->GetAlignedPointerFromEmbedderData(1));
+    auto proc = Processor::FromContext(ctx);
     
     BOOST_REQUIRE(info[0]->IsFunction());
     BOOST_CHECK(info[0]->IsAsyncFunction());
@@ -108,7 +108,6 @@ TESTX_AUTO_TEST_CASE(test_callback)
     proc->post([&proc](v8::Isolate* iso, v8::Local<v8::Context>& ctx)
     {
         iso->AddMessageListener(&on_message);
-        ctx->SetAlignedPointerInEmbedderData(1, proc.get());
         //ctx->Global()->Set(ctx, v8::String::NewFromUtf8(iso, "do_next"), v8::Function::New(iso, call_next));
         v8::Local<v8::String> source =
             v8::String::NewFromUtf8(iso, R"code(
