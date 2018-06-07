@@ -1,0 +1,38 @@
+body {
+    background-color: darkgray;
+    background-image: url("/assets/background-tiles.png");
+    background-repeat: repeat;
+    padding-bottom: 500px;
+}
+
+body > div {
+    width: 100%;
+}
+
+.main-container {
+    width: 80%;
+    margin: 0 auto;
+    color: grey;
+    background-color: #111122;
+    padding: 0 1pt;
+}
+
+.login-view {
+    padding: 20px;
+}
+
+input {
+    background-color: grey;
+    color: black;
+    border: 2px solid dimgrey;
+}
+
+.login-view input {
+    margin: 2px;
+}
+
+.logout-button {
+    float: right;
+    color: white;
+    background-color: dimgray;
+}
