@@ -42,9 +42,9 @@ Game::Game(const GameConfig& config)
         auto p = make_player(_next_id(), name);
         auto ship = p->mainShip = make_object<Spaceship>(p->id());
         ship->set_position(vec2(0, 50.0f));
-        if (name == "tobi") {
+        /*if (name == "tobi") {
             ship->set_target(Target(vec2(160, 50.0f)));
-        }
+        }*/
     }
 
     // make map

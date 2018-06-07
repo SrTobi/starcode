@@ -7,11 +7,18 @@
 #include <tuple>
 #include <type_traits>
 #include <utility>
+#include <array>
+#include <iostream>
+#include <functional>
 
 #include "defs.hpp"
+#include "processor.hpp"
 
 namespace bd {
     using namespace v8;
+
+    template<typename T>
+    Local<Value> toLocal(Isolate* iso, Local<Context> ctx, const T& val);
 
     template<typename T>
     inline Local<T> unwrap(const MaybeLocal<T>& maybe, const std::string& msg = "Failed to unwrap non existing local")
@@ -56,6 +63,7 @@ namespace bd {
                 } \
             };
         
+        MAKE_NUMBER_CONVERTER(bool, ToBoolean, Boolean::New, Boolean, "Expected bool");
         MAKE_NUMBER_CONVERTER(double, ToNumber, Number::New, Number, "Expected number");
         MAKE_NUMBER_CONVERTER(int64_t, ToInteger, Number::New, Number, "Expected integer");
         MAKE_NUMBER_CONVERTER(int32_t, ToInt32, Integer::New, Integer, "Expected integer");
@@ -87,6 +95,42 @@ namespace bd {
             static inline Local<String> to_local(Isolate* iso, Local<Context> ctx, const std::string& str)
             {
                 return unwrap(String::NewFromUtf8(iso, str.c_str(), NewStringType::kNormal, str.size()), "Failed to convert string to local");
+            }
+        };
+
+        template<typename... Args>
+        struct converter<std::function<void(Args...)>>
+        {
+            using ftype = std::function<void(Args...)>;
+
+            static inline ftype from_local(Isolate* iso, Local<Context> ctx, Local<Value> local)
+            {
+                auto proc = reinterpret_cast<Processor*>(ctx->GetAlignedPointerFromEmbedderData(1));
+                auto func_l = v8::Local<v8::Function>::Cast(local);
+                v8::CopyablePersistentTraits<v8::Function>::CopyablePersistent func(iso, func_l);
+
+                return [func, proc](Args... args) -> void
+                {
+                    std::cout << "before post" << std::endl;
+                    proc->post([func, args...](v8::Isolate* iso, v8::Local<v8::Context>& ctx)
+                    {
+                        std::cout << "begin execute call" << std::endl;
+                        std::array<Local<Value>, sizeof...(Args)> argList = {
+                            ::bd::toLocal(iso, ctx, args)...
+                        };
+                        auto func_l = func.Get(iso);
+                        
+                        func_l->Call(ctx->Global(), argList.size(), argList.data());
+                        std::cout << "end execute call" << std::endl;
+                    });
+                    std::cout << "before post" << std::endl;
+                };
+            }
+
+            template<typename T>
+            static inline Local<v8::Function> to_local(Isolate* iso, Local<Context> ctx, const T& func)
+            {
+                static_assert(!std::is_same<T, void>::value, "Can not convert function to local!");
             }
         };
 

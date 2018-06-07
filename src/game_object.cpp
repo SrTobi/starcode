@@ -191,7 +191,7 @@ void GameObject::_update(float dt)
         }
     }
     _position += dt * _velocity;
-    if (_velocity != vec2() && rand() % 30 == 0)
+    if (_velocity != vec2())
         std::cout << name() << " at " << _position << std::endl;
 }
 
